@@ -7,17 +7,22 @@ function updateBadgeTitle(count) {
 // set icon's text
 function updateBadgeText() {
   var displayOption = localStorage["badgeDisplayOption"];
-  if ( typeof displayOption == "undefined" || displayOption == "allWindows") {
-    chrome.browserAction.setBadgeText({text: String(allWindowsTabCount)});
-    updateBadgeTitle(allWindowsTabCount);
+  if(typeof displayOption == "undefined" || displayOption == "allWindows") {
+    // chrome.browserAction.setBadgeText({text: String(allWindowsTabCount)});
+    // updateBadgeTitle(allWindowsTabCount);
+    // limiting count to current window
+    chrome.tabs.query({currentWindow:true}, function(tabs) {
+      chrome.browserAction.setBadgeText({text: String(tabs.length)});
+      updateBadgeTitle(tabs.length);
+    });
   } else {
-    //Use callback
-    //This feature is currently disabled from options.html and options.js
+    // use callback
+    // this feature is currently disabled from options.html and options.js
     count = getCurrentWindowTabs(updateCurrentWindowBadge);
   }
 }
 
-//count all tabs in all windows 
+// count all tabs in all windows
 function getAllStats(callback) {
   chrome.windows.getAll({populate: true}, function (window_list) {
     callback(window_list);
@@ -27,9 +32,9 @@ function getAllStats(callback) {
 function displayResults(window_list) {
   allWindowsTabCount = 0;
   windowCount = 0;
-  for(var i=0; i<window_list.length; i++) { 
+  for(var i=0; i<window_list.length; i++) {
     allWindowsTabCount += window_list[i].tabs.length;
-  } 
+  }
   localStorage["windowsCount"] = window_list.length;
   localStorage["allWindowsTabsCount"] = allWindowsTabCount;
   updateBadgeText();
@@ -38,20 +43,20 @@ function displayResults(window_list) {
 function registerTabDedupeHandler() {
   chrome.tabs.onUpdated.addListener(
     function(tabId, changeInfo, tab) {
-      if (changeInfo.url) {
+      if(changeInfo.url) {
         // check if any other tabs with different Ids exist with same URL
         chrome.tabs.query({'url': changeInfo.url}, function(tabs) {
           if(tabs.length == 2) {
             var oldTab = tabs[0].id == tabId ? tabs[1] : tabs[0];
-            // This is a new duplicate
+            // this is a new duplicate
             var dedupe = confirm(
                 "Duplicate tab detected. Switch to existing open tab?");
-            if (dedupe) {
-              // Switch to existing tab and make it active.
+            if(dedupe) {
+              // switch to existing tab and make it active
               chrome.tabs.update(oldTab.id, {'active': true}, function() {
-                // Make sure the window of that tab is also made active
+                // make sure the window of that tab is also made active
                 chrome.windows.update(oldTab.windowId, {'focused': true}, function() {
-                  // And kill the newly opened tab.
+                  // and kill the newly opened tab
                   chrome.tabs.remove(tabId);
                 });
               });
@@ -63,7 +68,7 @@ function registerTabDedupeHandler() {
 };
 
 function registerTabJanitor(days) {
-  /** Every X minutes, detect old unused tabs and remove them. */
+  /** every X minutes, detect old unused tabs and remove them */
   setInterval(function() {
     var keys = Object.keys(tab_activation_history);
     var now = Date.now();
@@ -77,47 +82,52 @@ function registerTabJanitor(days) {
   }, 1000*60*60);
 };
 
-/* Keeps track of the last timestamp each tab was activated */
+/* keeps track of the last timestamp each tab was activated */
 var tab_activation_history = {};
 chrome.tabs.onActivated.addListener(function(activeInfo) {
-  // Store timestamp in ms
+  // store timestamp in ms
   tab_activation_history[activeInfo.tabId] = Date.now();
 });
 
 function init() {
-  // Action taken when a new tab is opened.
+  // action taken when a new tab is opened.
   chrome.tabs.onCreated.addListener(function(tab) {
     getAllStats(displayResults);
   });
-  
-  // Action taken when a tab is closed.
+
+  // action taken when a tab is closed
   chrome.tabs.onRemoved.addListener(function(tab) {
     getAllStats(displayResults);
   });
-  
-  // Action taken when a new window is opened
+
+  // action taken when a new window is opened
   chrome.windows.onCreated.addListener(function(tab) {
     getAllStats(displayResults);
   });
-  
-  // Action taken when a windows is closed.
+
+  // action taken when a windows is closed
   chrome.windows.onRemoved.addListener(function(tab) {
     getAllStats(displayResults);
   });
-  
-  // Initialize the stats to start off with.
+
+  // to change badge text on switching current tab
+  chrome.windows.onFocusChanged.addListener(function(tab) {
+    getAllStats(displayResults);
+  });
+
+  // initialize the stats to start off with
   getAllStats(displayResults);
-  
-  // Activate tab de-dupe detector if enabled in options.
+
+  // activate tab de-dupe detector if enabled in options
   if (localStorage["tabDedupe"]) {
     registerTabDedupeHandler();
   }
-  
-  // Activate tab janitor if enabled.
+
+  // activate tab janitor if enabled
   if (localStorage["tabJanitor"]) {
     registerTabJanitor(localStorage["tabJanitorDays"]);
   }
 }
 
-// Initialize the extension.
+// initialize the extension
 init();

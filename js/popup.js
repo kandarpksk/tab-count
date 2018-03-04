@@ -1,7 +1,7 @@
 //get count of tabs in current window. Required for the popoup display box.
 function getCurrentWindowTabCount() {
   chrome.tabs.query({currentWindow:true}, function(tabs) {
-    lenText = 'Number of tabs on this window:<strong> ' + tabs.length + '</strong>';
+    lenText = 'Number of tabs (this window only):<strong> ' + tabs.length + '</strong>';
     document.getElementById('windowTabs').innerHTML = lenText;
   });
 }
@@ -29,17 +29,18 @@ function displayResults(tabs){
     var cell1 = row.insertCell(0);
     var cell2 = row.insertCell(1);
     var cell3 = row.insertCell(2);
-    
+
     cell1.innerHTML = "<img src=" + tabs[i].favIconUrl + " width='16' height='16'>";
-    cell2.innerHTML = "<span style=cursor:pointer><font color=red>X</font></span>";
+    // maybe make this prettier later if desired
+    // cell2.innerHTML = "<span style=cursor:pointer><font color=red>X</font></span>";
     cell3.innerHTML = "<span style=cursor:pointer title='" + tabs[i].url + "'>" +  tabs[i].title + "</span>";
 
-    cell2.addEventListener("click", (function(tabID) {
-      return function() {
-        closeTab(tabID);
-      }
-    })(tabs[i].id));
-    
+    // cell2.addEventListener("click", (function(tabID) {
+    //   return function() {
+    //     closeTab(tabID);
+    //   }
+    // })(tabs[i].id));
+
     cell3.addEventListener("click", (function(tabID, windowID) {
       return function() {
         openTab(tabID, windowID);
@@ -66,6 +67,5 @@ var tabsDisplayOption = localStorage["popupDisplayOption"];
 if (typeof tabsDisplayOption == "undefined" || tabsDisplayOption == "currentWindow") {
   getCurrentWindowTabs(displayResults);
 } else {
-  //getCurrentWindowTabCount();
   getAllTabs(displayResults);
 }
