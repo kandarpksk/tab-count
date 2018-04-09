@@ -50,7 +50,7 @@ function registerTabDedupeHandler() {
             var oldTab = tabs[0].id == tabId ? tabs[1] : tabs[0];
             // this is a new duplicate
             var dedupe = confirm(
-                "Duplicate tab detected. Switch to existing open tab?");
+                "Duplicate tab detected. Switch to existing tab?");
             if(dedupe) {
               // switch to existing tab and make it active
               chrome.tabs.update(oldTab.id, {'active': true}, function() {
