@@ -46,11 +46,11 @@ function registerTabDedupeHandler() {
       if(changeInfo.url) {
         // check if any other tabs with different Ids exist with same URL
         chrome.tabs.query({'url': changeInfo.url}, function(tabs) {
-          if(tabs.length == 2) {
+          if(tabs.length == 2 && changeInfo.url != "chrome://newtab/") {
             var oldTab = tabs[0].id == tabId ? tabs[1] : tabs[0];
             // this is a new duplicate
             var dedupe = confirm(
-                "Duplicate tab detected. Switch to existing tab?");
+                "Duplicate tab opened. Would you like to switch to the existing tab instead?");
             if(dedupe) {
               // switch to existing tab and make it active
               chrome.tabs.update(oldTab.id, {'active': true}, function() {
@@ -76,7 +76,7 @@ function registerTabJanitor(days) {
       var ts = tab_activation_history[tabId];
       if (ts - now > (1000 * 60 * 60 * 24 * days)) {
         // tab was not activated for 5 days
-        chrome.tabs.remove(tabId);
+        // chrome.tabs.remove(tabId); disabled for safety
       }
     });
   }, 1000*60*60);

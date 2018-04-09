@@ -15,7 +15,7 @@ function save_options(type, value) {
   }
   // update selection status
   var status = document.getElementById("status");
-  status.innerHTML = "Selection Saved...";
+  status.innerHTML = "Selection saved!";
   setTimeout(function() {
     status.innerHTML = "";
   }, 750);
