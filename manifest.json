@@ -19,12 +19,7 @@
   "browser_action": {
     "default_popup": "popup.html",
     "default_name": "Tab Count",
-    "default_icon": "assets/icon19.png",
     "default_title": "Tab Count"
-  },
-
-  "icons": {
-    "128": "assets/icon128.png"
   },
 
   "permissions": ["tabs"]
